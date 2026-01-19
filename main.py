@@ -32,7 +32,7 @@ class MultipleChoiceQuestion(Question):
         for answer in self.answers:
             spacing += 1
 
-            if spacing % 2 == 0:
+            if spacing % 2 == 0 or spacing == len(self.answers):
                 question += f"{spacing}. {answer}\n"
                 continue
 
