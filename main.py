@@ -4,10 +4,10 @@ class Question:
     def __init__(self, question, answers, correct):
         self.question = question
         self.answers = answers
-        self.correct = correct
+        self.correct = correct.lower()
 
     def check(self, answer):
-        if self.correct == answer:
+        if self.correct == answer.lower():
             return True
 
         return False
