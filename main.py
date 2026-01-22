@@ -1,74 +1,81 @@
 import math
 
-class Question:
-    def __init__(self, question, answers, correct):
+import inquirer
+
+print("--- QuizPy 2.0 ---")
+
+class MultipleChoiceQuestion:
+    def __init__(self, question, answers, answer):
         self.question = question
         self.answers = answers
-        self.correct = correct.lower()
+        self.answer = answer
 
-    def check(self, answer):
-        if self.correct == answer.lower():
-            return True
+    def query(self):
+        prompt = [
+            inquirer.List(
+                "q",
+                message=self.question,
+                choices=self.answers,
+            ),
+        ]
 
-        return False
+        user_answer = inquirer.prompt(prompt)
+        if user_answer["q"] == self.answer:
+            return 1
 
-class TypeQuestion(Question):
-    def __init__(self, question, correct):
-        super().__init__(question, None, correct)
+        return 0
 
-    def __str__(self):
-        question = f"{self.question}\n"
-        question += "Type your answer below\n"
-        return question
+class TextQuestion:
+    def __init__(self, question, answers):
+        self.question = question
+        self.answers = answers
 
-class MultipleChoiceQuestion(Question):
-    def __init__(self, question, answers, correct):
-        super().__init__(question, answers, correct)
+    def query(self):
+        prompt = [inquirer.Text('q', message=self.question)]
 
-    def __str__(self):
-        spacing = 0
-        question = f"{self.question}\n"
+        user_answer = inquirer.prompt(prompt)
 
-        for answer in self.answers:
-            spacing += 1
+        if user_answer["q"] in self.answers:
+            return 1
 
-            if spacing % 2 == 0 or spacing == len(self.answers):
-                question += f"{spacing}. {answer}\n"
-                continue
+        return 0
 
-            question += f"{spacing}. {answer}, "
+class CheckboxQuestion:
+    def __init__(self, question, answers, correct: list):
+        self.question = question
+        self.answers = answers
+        self.correct = correct
 
-        question += "Type the number corresponding to your answer below"
+    def query(self):
+        prompt = [inquirer.Checkbox('q', message=self.question, choices=self.answers)]
 
-        return question
+        user_answer = inquirer.prompt(prompt)
+
+        if user_answer["q"] == self.correct:
+            return 1
+
+        return 0
 
 class Quiz:
     def __init__(self, questions):
         self.questions = questions
-        self.total = len(questions)
-
         self.score = 0
-        self.current_question = None
-        self.question_number = -1
-
-        self.push()
+        self.idx = -1
+        self.current_q = None
 
     def push(self):
-        self.question_number += 1
-        if self.question_number < self.total:
-            self.current_question = self.questions[self.question_number]
+        self.idx += 1
+
+        if self.idx < len(self.questions):
+            self.current_q = self.questions[self.idx]
+            return True
 
         else:
-            self.current_question = None
+            self.current_q = None
+            return False
 
     def run(self):
-        while self.current_question:
-            print(self.current_question)
-            correct = self.current_question.check(input(""))
+        while self.push():
+            self.score += self.current_q.query()
 
-            if correct:
-                self.score += 1
-
-            self.push()
-
-        print(f"You got {self.score} question{'s' if self.score != 1 else ''} correct out of {self.total} question{'s' if self.total != 1 else ''} ({math.floor(self.score / self.total * 100)}%).")
+        print(f"You got {self.score} point{'' if self.score != 1 else 's'} out of {len(self.questions)} question{'' if len(self.questions) != 1 else 's'} with a rate of {math.floor(self.score / len(self.questions) * 100)}%")
